@@ -110,8 +110,8 @@ def turn(p, u, n, q):
      
     d = dot(v, n)
 
-    if d > +0.002: return TurnDirection.Right
-    if d < -0.002: return TurnDirection.Left
+    if d > +0.001: return TurnDirection.Right
+    if d < -0.001: return TurnDirection.Left
 
     return TurnDirection.NoTurn
 
