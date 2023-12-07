@@ -24,21 +24,13 @@ def copy(source, target):
         #print(f"File already exists: {target}")
         #return
 
-    vertex   = []
+    vertex = []
 
-    hit = False
-    
-    lineNumber = 0
-    
     with open(target, 'w') as targetFile:
         with open(source, 'r') as sourceFile:
             for line in sourceFile:
                 
                 line = line.strip()
-                copy = line
-                
-                if line == 'f 2255/1226/393 6413/3330/908 6414/3331/446 5622/3010/394':
-                    hit = True
                     
                 if line != '':
                     words = line.split()
@@ -81,18 +73,10 @@ def copy(source, target):
                             line += index_word[triangle.p0.i] + ' '
                             line += index_word[triangle.p1.i] + ' '
                             line += index_word[triangle.p2.i]
-                            lineNumber += 1
                             targetFile.write(line + '\n')
-                            
-                            if lineNumber == 68988:
-                               lineNumber = 0
-                            
-                            if line == 'f 2255/1226/393 6413/3330/908 6414/3331/446':
-                                line = ""
 
                         continue
                     
-                lineNumber += 1
                 targetFile.write(line + '\n')
               
     targetFile.close()

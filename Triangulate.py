@@ -323,8 +323,7 @@ def triangulate(polygon):
     
     n = normal(polygon)
     
-    if len(polygon) < 3:
-        return [], n
+    if len(polygon) < 3: return [], n
 
     if len(polygon) == 3:
         t = Triangle(polygon[0], polygon[1], polygon[2])
