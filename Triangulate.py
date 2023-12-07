@@ -24,7 +24,7 @@ class TurnDirection(Enum):
 class Point:
            
     def __init__(self, p, i=None):
-        self.p = p.copy()
+        self.p = p
         self.i = i
 
     def __getitem__(self, index):
@@ -75,27 +75,34 @@ class Point:
         return cls([0, 0, 0])
     
 def dot(u, v):
-    return np.dot(u.p, v.p)
+    dx = u[0] * v[0]
+    dy = u[1] * v[1]
+    dz = u[2] * v[2]
+    return dx + dy + dz
 
 def cross(u, v):
-    return Point(np.cross(u.p, v.p))
+    x = u[1] * v[2] - u[2] * v[1]
+    y = u[2] * v[0] - u[0] * v[2]
+    z = u[0] * v[1] - u[1] * v[0]
+    return Point([x, y, z])
 
 def magnitude(u):
     return np.linalg.norm(u.p)
     
 class Triangle:
-    def __init__(self, p0=Point.zero(), p1=Point.zero(), p2=Point.zero()):
-        self.p0 = p0.copy()
-        self.p1 = p1.copy()
-        self.p2 = p2.copy()
-        
-    def normal(self):
-        u = self.p1 - self.p0
-        v = self.p2 - self.p1
-        return cross(v, u)
+    def __init__(self, p0, p1, p2):
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
 
 def turn(p, u, n, q):
-    d = dot(cross(q - p, u), n)
+    v = cross(q - p, u)
+    
+    if np.abs(v[0]) < epsilon: v[0] = 0.0
+    if np.abs(v[1]) < epsilon: v[1] = 0.0
+    if np.abs(v[2]) < epsilon: v[2] = 0.0
+    
+    d = dot(v, n)
 
     if d > 0.0:
         return TurnDirection.Right
@@ -125,6 +132,10 @@ def normal(polygon):
         v[0] += (next[1] - item[1]) * (next[2] + item[2])
         v[1] += (next[2] - item[2]) * (next[0] + item[0])
         v[2] += (next[0] - item[0]) * (next[1] + item[1])
+
+    if np.abs(v[0]) < epsilon: v[0] = 0.0
+    if np.abs(v[1]) < epsilon: v[1] = 0.0
+    if np.abs(v[2]) < epsilon: v[2] = 0.0
 
     return normalize(v)
 
@@ -159,11 +170,8 @@ def pointInsideOrEdgeTriangle(a, b, c, p):
 def isEar(index, polygon, normal):
     n = len(polygon)
 
-    if n < 3:
-        return False
-
-    if n == 3:
-        return True
+    if n <  3: return False
+    if n == 3: return True
 
     prevIndex = (index - 1 + n) % n
     itemIndex = index % n
@@ -191,11 +199,8 @@ def isEar(index, polygon, normal):
 def getBiggestEar(polygon, normal):
     n = len(polygon)
 
-    if n == 3:
-        return 0
-
-    if n == 0:
-        return -1
+    if n == 3: return 0
+    if n == 0: return -1
 
     maxIndex = -1
     maxArea = float("-inf")
@@ -217,11 +222,8 @@ def getBiggestEar(polygon, normal):
 def convex(polygon, normal):
     n = len(polygon)
 
-    if n < 3:
-        return False
-
-    if n == 3:
-        return True
+    if n <  3: return False
+    if n == 3: return True
 
     polygonTurn = TurnDirection.NoTurn
 
@@ -247,8 +249,7 @@ def convex(polygon, normal):
 def clockwiseOriented(polygon, normal):
     n = len(polygon)
 
-    if n < 3:
-        return False
+    if n < 3: return False
 
     orientationSum = 0.0
 
@@ -305,30 +306,26 @@ def cutTriangulation(polygon, normal):
 
 def removeConsecutiveEqualPoints(polygon):
     uniquePolygon = []
-    last_point = None
-
-    for point in polygon:
-        if point != last_point:
-            uniquePolygon.append(point)
-            last_point = point
-
+    n = len(polygon)
+    for index in range(n):
+        item = polygon[index % n]
+        next = polygon[(index + 1) % n]
+        if item.i == next.i: continue
+        uniquePolygon.append(item)
     return uniquePolygon
 
 def triangulate(polygon):
     
     polygon = removeConsecutiveEqualPoints(polygon)
     
+    n = normal(polygon)
+    
     if len(polygon) < 3:
-        return [], Point.zero()
+        return [], n
 
     if len(polygon) == 3:
-        t = Triangle()
-        t.p0 = polygon[0].copy()
-        t.p1 = polygon[1].copy()
-        t.p2 = polygon[2].copy()
-        return [t], t.normal()
-    
-    n = normal(polygon)
+        t = Triangle(polygon[0], polygon[1], polygon[2])
+        return [t], n
 
     if convex(polygon, n):
         return fanTriangulation(polygon), n

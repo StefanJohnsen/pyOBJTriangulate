@@ -8,9 +8,8 @@ vector = np.array
 point = Triangulate.Point
 
 def listIndex(index, indexToList):
-    i = int(index)
-    if i > 0: return i - 1
-    return i + len(indexToList)
+    if index > 0: return index - 1
+    return index + len(indexToList)
 
 def copy(source, target):
     if source is None or target is None:
@@ -27,12 +26,18 @@ def copy(source, target):
 
     vertex   = []
 
+    hit = False
+    
     with open(target, 'w') as targetFile:
         with open(source, 'r') as sourceFile:
             for line in sourceFile:
                 
                 line = line.strip()
+                copy = line
                 
+                if line == 'f 167/132/8 284/130/8 285/183/8 73/41/8':
+                    hit = True
+                    
                 if line != '':
                     words = line.split()
                     command = words[0]
@@ -43,26 +48,43 @@ def copy(source, target):
                         vertex.append(vector([x, y, z]))
                 
                     elif command == 'f' and len(data) > 3:
+                        
                         polygon = []
+                        index_word = {}       
+                                         
                         for i in range(len(data)):
                             word = data[i]
                             indices = word.split('/')
                             if len(indices) > 0:
-                                index = indices[0]
-                                v = vertex[listIndex(index, vertex)]
-                                p = point(v, i)
+                                index = int(indices[0])
+                                index = listIndex(index, vertex)
+                          
+                                if index not in index_word:
+                                    index_word[index] = word
+
+                                v = vertex[index]
+                                p = point(v, index)
                                 polygon.append(p)
                         
-                        if len(polygon) > 0:
-                            triangles, _ = Triangulate.triangulate(polygon)
-                            if len(triangles) > 0:
-                                for triangle in triangles:
-                                    line = "f "
-                                    line += data[triangle.p0.i] + ' '
-                                    line += data[triangle.p1.i] + ' '
-                                    line += data[triangle.p2.i] + '\n'
-                                    targetFile.write(line)
-                                continue
+                        if len(polygon) == 0:
+                            continue
+                        
+                        triangles, _ = Triangulate.triangulate(polygon)
+
+                        if len(triangles) == 0:
+                            continue
+                        
+                        for triangle in triangles:
+                            line = "f "
+                            line += index_word[triangle.p0.i] + ' '
+                            line += index_word[triangle.p1.i] + ' '
+                            line += index_word[triangle.p2.i] + '\n'
+                            targetFile.write(line)
+                            
+                            if line == 'f 221/159/15 171/135/1 134/101/1\n':
+                                hit = True
+
+                        continue
                     
                 targetFile.write(line + '\n')
               
