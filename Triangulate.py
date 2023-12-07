@@ -11,6 +11,7 @@
 #
 # This software is released under the MIT License.
 
+import math
 import numpy as np
 from enum import Enum
 
@@ -24,6 +25,10 @@ class TurnDirection(Enum):
 class Point:
            
     def __init__(self, p, i=None):
+        
+        if not isinstance(p, np.ndarray):
+            raise ValueError("Point only supports ndarray")
+                    
         self.p = p
         self.i = i
 
@@ -46,17 +51,18 @@ class Point:
             raise ValueError("Subtraction is only supported between Point objects.")
 
     def __mul__(self, scalar):
-        if isinstance(scalar, (int, float)):
-            return Point(self.p * scalar)
+        if isinstance(scalar, (float)):
+            self.p *= scalar
+            return self.p
         else:
             raise ValueError("Multiplication is only supported with scalar values.")
 
     def __truediv__(self, scalar):
-        if isinstance(scalar, (int, float)):
-            if scalar != 0:
-                return Point(self.p / scalar)
-            else:
-                raise ValueError("Division by zero is not allowed.")
+        if isinstance(scalar, (float)):
+            if scalar == 0.0:
+                return Point.zero()
+            self.p /= scalar
+            return self.p
         else:
             raise ValueError("Division is only supported with scalar values.")
 
@@ -66,13 +72,13 @@ class Point:
         if np.abs(self.p[1] - other.p[1]) > epsilon: return False
         if np.abs(self.p[2] - other.p[2]) > epsilon: return False
         return True
-        
+         
     def copy(self):
-        return Point(self.p, self.i)
+        return Point(self.p.copy(), self.i)
             
     @classmethod
     def zero(cls):
-        return cls([0, 0, 0])
+        return cls(np.array([0.0, 0.0, 0.0]))
     
 def dot(u, v):
     dx = u[0] * v[0]
@@ -84,10 +90,13 @@ def cross(u, v):
     x = u[1] * v[2] - u[2] * v[1]
     y = u[2] * v[0] - u[0] * v[2]
     z = u[0] * v[1] - u[1] * v[0]
-    return Point([x, y, z])
+    return Point(np.array([x, y, z]))
 
-def magnitude(u):
-    return np.linalg.norm(u.p)
+def length(u):
+    sx = u[0] * u[0]
+    sy = u[1] * u[1]
+    sz = u[2] * u[2]
+    return math.sqrt(sx + sy + sz)
     
 class Triangle:
     def __init__(self, p0, p1, p2):
@@ -96,28 +105,22 @@ class Triangle:
         self.p2 = p2
 
 def turn(p, u, n, q):
-    v = cross(q - p, u)
-    
-    if np.abs(v[0]) < epsilon: v[0] = 0.0
-    if np.abs(v[1]) < epsilon: v[1] = 0.0
-    if np.abs(v[2]) < epsilon: v[2] = 0.0
-    
+   
+    v = cross(q.p - p.p, u)
+     
     d = dot(v, n)
 
-    if d > 0.0:
-        return TurnDirection.Right
-    elif d < 0.0:
-        return TurnDirection.Left
-    else:
-        return TurnDirection.NoTurn
+    if d > +0.002: return TurnDirection.Right
+    if d < -0.002: return TurnDirection.Left
+
+    return TurnDirection.NoTurn
 
 def triangleAreaSquared(a, b, c):
-    c = cross(b - a, c - a)
-    return magnitude(c)**2 / 4.0
+    c = cross(b.p - a.p, c.p - a.p)
+    return length(c)**2.0 / 4.0
 
 def normalize(v):
-    m = magnitude(v)
-    return v/m if m != 0 else Point.zero()
+    return v/length(v)
 
 def normal(polygon):
     n = len(polygon)
@@ -140,7 +143,7 @@ def normal(polygon):
     return normalize(v)
 
 def getBarycentricTriangleCoordinates(a, b, c, p):
-    alpha = beta = gamma = -2 * epsilon
+    alpha = beta = gamma = -2.0 * epsilon
 
     v0 = c - a
     v1 = b - a

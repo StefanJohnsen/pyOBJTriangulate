@@ -28,6 +28,8 @@ def copy(source, target):
 
     hit = False
     
+    lineNumber = 0
+    
     with open(target, 'w') as targetFile:
         with open(source, 'r') as sourceFile:
             for line in sourceFile:
@@ -35,7 +37,7 @@ def copy(source, target):
                 line = line.strip()
                 copy = line
                 
-                if line == 'f 167/132/8 284/130/8 285/183/8 73/41/8':
+                if line == 'f 2255/1226/393 6413/3330/908 6414/3331/446 5622/3010/394':
                     hit = True
                     
                 if line != '':
@@ -47,7 +49,7 @@ def copy(source, target):
                         x, y, z = map(float, data[:3])
                         vertex.append(vector([x, y, z]))
                 
-                    elif command == 'f' and len(data) > 3:
+                    elif command == 'f':
                         
                         polygon = []
                         index_word = {}       
@@ -78,14 +80,19 @@ def copy(source, target):
                             line = "f "
                             line += index_word[triangle.p0.i] + ' '
                             line += index_word[triangle.p1.i] + ' '
-                            line += index_word[triangle.p2.i] + '\n'
-                            targetFile.write(line)
+                            line += index_word[triangle.p2.i]
+                            lineNumber += 1
+                            targetFile.write(line + '\n')
                             
-                            if line == 'f 221/159/15 171/135/1 134/101/1\n':
-                                hit = True
+                            if lineNumber == 68988:
+                               lineNumber = 0
+                            
+                            if line == 'f 2255/1226/393 6413/3330/908 6414/3331/446':
+                                line = ""
 
                         continue
                     
+                lineNumber += 1
                 targetFile.write(line + '\n')
               
     targetFile.close()
