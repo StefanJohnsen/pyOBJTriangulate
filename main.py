@@ -57,7 +57,7 @@ def copy(source, target):
                                     index_word[index] = word
 
                                 v = vertex[index]
-                                p = point(v, index)
+                                p = point(v[0], v[1], v[2], index)
                                 polygon.append(p)
                         
                         if len(polygon) == 0:
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     #source_file = sys.argv[1]
     #target_file = sys.argv[2]
-    source_file = "lego.obj"
-    target_file = "lego2.obj"
+    source_file = "c:\\temp\\trumpet.obj"
+    target_file = "c:\\temp\\trumpet2.obj"
 
     copy(source_file, target_file)

@@ -23,81 +23,64 @@ class TurnDirection(Enum):
     NoTurn = 0
 
 class Point:
-           
-    def __init__(self, p, i=None):
-        
-        if not isinstance(p, np.ndarray):
-            raise ValueError("Point only supports ndarray")
-                    
-        self.p = p
+    def __init__(self, x=0.0, y=0.0, z=0.0, i=None):
+        self.x = x
+        self.y = y
+        self.z = z
         self.i = i
 
-    def __getitem__(self, index):
-        return self.p[index]
-
-    def __setitem__(self, index, value):
-        self.p[index] = value
-                            
     def __add__(self, other):
         if isinstance(other, Point):
-            return Point(self.p + other.p)
+            return Point(self.x + other.x, self.y + other.y, self.z + other.z)
         else:
             raise ValueError("Addition is only supported between Point objects.")
 
     def __sub__(self, other):
         if isinstance(other, Point):
-            return Point(self.p - other.p)
+            return Point(self.x - other.x, self.y - other.y, self.z - other.z)
         else:
             raise ValueError("Subtraction is only supported between Point objects.")
 
     def __mul__(self, scalar):
-        if isinstance(scalar, (float)):
-            self.p *= scalar
-            return self.p
+        if isinstance(scalar, float):
+            return Point(self.x * scalar, self.y * scalar, self.z * scalar)
         else:
             raise ValueError("Multiplication is only supported with scalar values.")
 
     def __truediv__(self, scalar):
-        if isinstance(scalar, (float)):
+        if isinstance(scalar, float):
             if scalar == 0.0:
                 return Point.zero()
-            self.p /= scalar
-            return self.p
+            return Point(self.x / scalar, self.y / scalar, self.z / scalar)
         else:
             raise ValueError("Division is only supported with scalar values.")
 
     def __eq__(self, other):
         if other is None: return False
-        if np.abs(self.p[0] - other.p[0]) > epsilon: return False
-        if np.abs(self.p[1] - other.p[1]) > epsilon: return False
-        if np.abs(self.p[2] - other.p[2]) > epsilon: return False
+        if abs(self.x - other.x) > epsilon: return False
+        if abs(self.y - other.y) > epsilon: return False
+        if abs(self.z - other.z) > epsilon: return False
         return True
-         
+
     def copy(self):
-        return Point(self.p.copy(), self.i)
-            
+        return Point(self.x, self.y, self.z, self.i)
+
     @classmethod
     def zero(cls):
-        return cls(np.array([0.0, 0.0, 0.0]))
-    
+        return cls(0.0, 0.0, 0.0)
+
 def dot(u, v):
-    dx = u[0] * v[0]
-    dy = u[1] * v[1]
-    dz = u[2] * v[2]
-    return dx + dy + dz
+    return u.x * v.x + u.y * v.y + u.z * v.z
 
 def cross(u, v):
-    x = u[1] * v[2] - u[2] * v[1]
-    y = u[2] * v[0] - u[0] * v[2]
-    z = u[0] * v[1] - u[1] * v[0]
-    return Point(np.array([x, y, z]))
+    x = u.y * v.z - u.z * v.y
+    y = u.z * v.x - u.x * v.z
+    z = u.x * v.y - u.y * v.x
+    return Point(x, y, z)
 
 def length(u):
-    sx = u[0] * u[0]
-    sy = u[1] * u[1]
-    sz = u[2] * u[2]
-    return math.sqrt(sx + sy + sz)
-    
+    return math.sqrt(u.x * u.x + u.y * u.y + u.z * u.z)
+
 class Triangle:
     def __init__(self, p0, p1, p2):
         self.p0 = p0
@@ -106,17 +89,17 @@ class Triangle:
 
 def turn(p, u, n, q):
    
-    v = cross(q.p - p.p, u)
+    v = cross(q - p, u)
      
     d = dot(v, n)
 
-    if d > +0.001: return TurnDirection.Right
-    if d < -0.001: return TurnDirection.Left
+    if d > +epsilon: return TurnDirection.Right
+    if d < -epsilon: return TurnDirection.Left
 
     return TurnDirection.NoTurn
 
 def triangleAreaSquared(a, b, c):
-    c = cross(b.p - a.p, c.p - a.p)
+    c = cross(b - a, c - a)
     return length(c)**2.0 / 4.0
 
 def normalize(v):
@@ -129,16 +112,13 @@ def normal(polygon):
     if n < 3: return v
 
     for index in range(n):
+        
         item = polygon[index % n]
         next = polygon[(index + 1) % n]
 
-        v[0] += (next[1] - item[1]) * (next[2] + item[2])
-        v[1] += (next[2] - item[2]) * (next[0] + item[0])
-        v[2] += (next[0] - item[0]) * (next[1] + item[1])
-
-    if np.abs(v[0]) < epsilon: v[0] = 0.0
-    if np.abs(v[1]) < epsilon: v[1] = 0.0
-    if np.abs(v[2]) < epsilon: v[2] = 0.0
+        v.x += (next.y - item.y) * (next.z + item.z);
+        v.y += (next.z - item.z) * (next.x + item.x);
+        v.z += (next.x - item.x) * (next.y + item.y);
 
     return normalize(v)
 
