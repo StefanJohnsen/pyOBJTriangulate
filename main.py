@@ -20,9 +20,8 @@ def copy(source, target):
         return
 
     if os.path.exists(target):
-        os.remove(target)
-        #print(f"File already exists: {target}")
-        #return
+        print(f"File already exists: {target}")
+        return
 
     vertex = []
 
@@ -81,18 +80,16 @@ def copy(source, target):
               
     targetFile.close()
     sourceFile.close()
-    
-    print(f"File copied from {source} to {target}")       
         
 if __name__ == "__main__":
     
-    #if len(sys.argv) != 3:
-    #    print("Usage: python main.py <source_file> <target_file>")
-    #    sys.exit(1)
+    if len(sys.argv) != 3:
+        print("Usage: python main.py <source objfile> <target objfile>")
+        sys.exit(1)
 
-    #source_file = sys.argv[1]
-    #target_file = sys.argv[2]
-    source_file = "c:\\temp\\trumpet.obj"
-    target_file = "c:\\temp\\trumpet2.obj"
+    source_file = sys.argv[1]
+    target_file = sys.argv[2]
 
     copy(source_file, target_file)
+    
+    print(f"File converted from {source_file} to {target_file}")
