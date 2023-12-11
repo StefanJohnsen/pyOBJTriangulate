@@ -3,7 +3,7 @@ Wavefront OBJ files typically consist of triangles, but they can also include qu
 This script is using the python script in the repository [pyTriangulate](https://github.com/StefanJohnsen/pyTriangulate).
 
 # Example
-The trumpet.obj file contains quads and polygons. Just run the script as follows 
+The [trumpet.obj](https://github.com/StefanJohnsen/pyOBJTriangulate/blob/main/objFiles/trumpet.obj) file contains quads and polygons. Just run the script as follows 
 ```
 python main.py .\objFiles\trumpet.obj .\objFiles\trumpet.triangulate.obj
 ```
